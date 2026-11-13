@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../MyGroceryList.Mobile.Data/MyGroceryList.Mobile.Data.csproj" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5"><PrivateAssets>all</PrivateAssets></PackageReference>
+    <!-- Exercise the actual MAUI ViewModels without depending on an emulator or a MAUI target. -->
+    <Compile Include="../MyGroceryList/ViewModels/*.cs" Link="Mobile/ViewModels/%(Filename)%(Extension)" />
+    <Compile Include="../MyGroceryList/Services/UiContracts.cs" Link="Mobile/UiContracts.cs" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

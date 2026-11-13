@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MyGroceryList.Mobile.ViewModels"
+             x:Class="MyGroceryList.Mobile.Views.ListsPage"
+             x:DataType="vm:ListsViewModel" Title="MyGroceryList">
+    <Grid Padding="20,12,20,16" RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="12">
+        <VerticalStackLayout Spacing="6">
+            <Label Text="NO SEU TEMPO, DO SEU JEITO" Style="{StaticResource Eyebrow}" />
+            <Label Text="Vamos às compras?" Style="{StaticResource PageHeading}" SemanticProperties.HeadingLevel="Level1" />
+            <Label Text="Lembre durante a semana. Marque no mercado." Style="{StaticResource MutedText}" />
+            <Label Text="Salvo neste aparelho · funciona offline" Style="{StaticResource MutedText}" FontSize="13" />
+        </VerticalStackLayout>
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
+            <Label Text="{Binding SectionTitle}" FontFamily="OpenSansSemibold" VerticalOptions="Center" FontSize="18" />
+            <Button Grid.Column="1" Text="{Binding SwitchLabel}" Command="{Binding SwitchArchiveCommand}" Style="{StaticResource TextButton}" />
+        </Grid>
+        <VerticalStackLayout Grid.Row="2" Spacing="4">
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Label Text="{Binding ErrorMessage}" Style="{StaticResource ErrorText}" />
+            <Button Text="Tentar novamente" Command="{Binding LoadCommand}" Style="{StaticResource TextButton}">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button" Binding="{Binding ErrorMessage}" Value=""><Setter Property="IsVisible" Value="False" /></DataTrigger>
+                </Button.Triggers>
+            </Button>
+        </VerticalStackLayout>
+        <CollectionView Grid.Row="3" ItemsSource="{Binding Lists}" SelectionMode="None" ItemsUpdatingScrollMode="KeepScrollOffset">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Padding="12,32" Spacing="12" VerticalOptions="Center">
+                    <Label Text="{Binding EmptyTitle}" FontSize="22" FontFamily="OpenSansSemibold" HorizontalTextAlignment="Center" />
+                    <Label Text="{Binding EmptyDescription}" Style="{StaticResource MutedText}" HorizontalTextAlignment="Center" />
+                    <Button Text="Criar uma lista" Command="{Binding CreateCommand}" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:ListCard">
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="{Binding Name}" FontSize="21" FontFamily="OpenSansSemibold" />
+                            <Label Text="{Binding ProgressLabel}" Style="{StaticResource MutedText}" />
+                            <Button Text="{Binding ActionLabel}" Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ListsViewModel}}, Path=OpenCommand}"
+                                    CommandParameter="{Binding .}" HorizontalOptions="Start" />
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+        <Button Grid.Row="4" Text="+ Nova lista" Command="{Binding CreateCommand}" SemanticProperties.Hint="Cria outra lista de compras neste aparelho" />
+    </Grid>
+</ContentPage>

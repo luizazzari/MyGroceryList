@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="MyGroceryList/MyGroceryList.Mobile.csproj" />
+  <Project Path="MyGroceryList.Domain/MyGroceryList.Domain.csproj" />
+  <Project Path="MyGroceryList.Application/MyGroceryList.Application.csproj" />
+  <Project Path="MyGroceryList.Mobile.Data/MyGroceryList.Mobile.Data.csproj" />
+  <Project Path="MyGroceryList.Tests/MyGroceryList.Tests.csproj" />
+</Solution>

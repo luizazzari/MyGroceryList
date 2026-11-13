@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MyGroceryList.Mobile.ViewModels"
+             x:Class="MyGroceryList.Mobile.Views.ShoppingPage"
+             x:DataType="vm:ShoppingViewModel" Title="{Binding Title}">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Renomear" Command="{Binding RenameCommand}" Order="Secondary" />
+        <ToolbarItem Text="Arquivar" Command="{Binding ArchiveCommand}" Order="Secondary" />
+    </ContentPage.ToolbarItems>
+    <Grid Padding="16,8,16,12" RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="8">
+        <VerticalStackLayout Spacing="6">
+            <Label Text="MODO COMPRAS" Style="{StaticResource Eyebrow}" />
+            <Label Text="{Binding ProgressLabel}" FontSize="21" FontFamily="OpenSansSemibold" SemanticProperties.HeadingLevel="Level1" />
+            <ProgressBar Progress="{Binding Progress}" SemanticProperties.Description="Progresso da compra" />
+            <Label Text="Toque no produto para marcar. Use Editar para ajustar." Style="{StaticResource MutedText}" FontSize="13" />
+            <Label Text="{Binding ErrorMessage}" Style="{StaticResource ErrorText}" />
+            <Button Text="Tentar novamente" Command="{Binding LoadCommand}" Style="{StaticResource TextButton}">
+                <Button.Triggers><DataTrigger TargetType="Button" Binding="{Binding ErrorMessage}" Value=""><Setter Property="IsVisible" Value="False" /></DataTrigger></Button.Triggers>
+            </Button>
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+        </VerticalStackLayout>
+        <Button Grid.Row="1" Text="{Binding PurchasedLabel}" Command="{Binding TogglePurchasedCommand}" Style="{StaticResource TextButton}" HorizontalOptions="Start" />
+        <Grid Grid.Row="2">
+            <CollectionView ItemsSource="{Binding Groups}" IsGrouped="True" SelectionMode="None" ItemsUpdatingScrollMode="KeepScrollOffset">
+                <CollectionView.GroupHeaderTemplate>
+                    <DataTemplate x:DataType="vm:ItemGroup">
+                        <Label Text="{Binding Name}" FontSize="17" FontFamily="OpenSansSemibold" Margin="2,16,0,8" SemanticProperties.HeadingLevel="Level2" />
+                    </DataTemplate>
+                </CollectionView.GroupHeaderTemplate>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ItemRowViewModel">
+                        <Border Style="{StaticResource Card}" Padding="4" Margin="0,0,0,8">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Grid Padding="10,12" ColumnDefinitions="36,*" ColumnSpacing="8" MinimumHeightRequest="64"
+                                      AutomationProperties.IsInAccessibleTree="True"
+                                      SemanticProperties.Hint="Toque duas vezes para alterar a marcação"
+                                      SemanticProperties.Description="{Binding AccessibilityLabel}">
+                                    <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding ToggleCommand}" /></Grid.GestureRecognizers>
+                                    <Label Text="{Binding MarkLabel}" FontSize="28" TextColor="{AppThemeBinding Light=#166548, Dark=#90DCB6}" VerticalOptions="Center" HorizontalOptions="Center" />
+                                    <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
+                                        <Label Text="{Binding Name}" FontSize="18">
+                                            <Label.Triggers><DataTrigger TargetType="Label" Binding="{Binding IsPurchased}" Value="True"><Setter Property="TextDecorations" Value="Strikethrough" /></DataTrigger></Label.Triggers>
+                                        </Label>
+                                        <Label Text="{Binding Detail}" Style="{StaticResource MutedText}" FontSize="14" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                                <Button Grid.Column="1" Text="Editar" Command="{Binding EditCommand}" Style="{StaticResource TextButton}" VerticalOptions="Center" SemanticProperties.Hint="Editar nome, quantidade, unidade, setor e observação do produto" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <VerticalStackLayout IsVisible="{Binding IsEmpty}" Padding="20,24" Spacing="12" VerticalOptions="Center">
+                <Label Text="O que está faltando em casa?" FontSize="23" FontFamily="OpenSansSemibold" HorizontalTextAlignment="Center" />
+                <Label Text="Adicione o primeiro produto no campo abaixo." Style="{StaticResource MutedText}" HorizontalTextAlignment="Center" />
+                <Button Text="Adicionar primeiro produto" Clicked="FocusQuickEntry" />
+            </VerticalStackLayout>
+            <VerticalStackLayout IsVisible="{Binding AllPurchased}" InputTransparent="True" Padding="20,24" VerticalOptions="Start">
+                <Label Text="Tudo no carrinho!" FontSize="22" FontFamily="OpenSansSemibold" HorizontalTextAlignment="Center" />
+                <Label Text="Os produtos estão na seção Comprados." Style="{StaticResource MutedText}" HorizontalTextAlignment="Center" />
+                <VerticalStackLayout.Triggers><DataTrigger TargetType="VerticalStackLayout" Binding="{Binding ShowPurchased}" Value="True"><Setter Property="IsVisible" Value="False" /></DataTrigger></VerticalStackLayout.Triggers>
+            </VerticalStackLayout>
+        </Grid>
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <Label Text="{Binding StatusMessage}" Style="{StaticResource MutedText}" VerticalOptions="Center" SemanticProperties.Description="{Binding StatusMessage}" />
+            <Button Grid.Column="1" Text="Desfazer" Command="{Binding UndoCommand}" IsVisible="{Binding CanUndo}" Style="{StaticResource TextButton}" />
+        </Grid>
+        <Border Grid.Row="4" Style="{StaticResource Card}" Padding="10,6">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Entry x:Name="QuickEntryField" Text="{Binding QuickEntry}" Placeholder="Ex.: 2 leites ou 1,5 kg de arroz"
+                       ReturnType="Next" ReturnCommand="{Binding AddCommand}" SemanticProperties.Description="Produto para adicionar à lista" />
+                <Button Grid.Column="1" Text="Adicionar" Command="{Binding AddCommand}" SemanticProperties.Description="Adicionar produto à lista" />
+            </Grid>
+        </Border>
+    </Grid>
+</ContentPage>
