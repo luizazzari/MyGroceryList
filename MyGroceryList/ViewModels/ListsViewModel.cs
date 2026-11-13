@@ -6,18 +6,21 @@ using MyGroceryList.Mobile.Services;
 
 namespace MyGroceryList.Mobile.ViewModels;
 
-public sealed record ListCard(Guid Id, string Name, string ProgressLabel, string ActionLabel);
+public sealed record ListCard(Guid Id, string Name, string ProgressLabel, string ActionLabel)
+{
+    public string AccessibilityLabel => $"{ActionLabel}: {Name}. {ProgressLabel}";
+}
 
 public partial class ListsViewModel(ShoppingService shopping, IAppNavigation navigation,
     IUserInteraction interaction, IUiDispatcher dispatcher) : ViewModelBase(interaction)
 {
     public ObservableCollection<ListCard> Lists { get; } = [];
     [ObservableProperty] public partial bool ShowingArchived { get; set; }
-    public string SectionTitle => ShowingArchived ? "Listas arquivadas" : "Minhas listas";
-    public string SwitchLabel => ShowingArchived ? "Ver listas ativas" : "Ver arquivadas";
-    public string EmptyTitle => ShowingArchived ? "Nenhuma lista arquivada" : "Sua próxima compra começa aqui";
+    public string SectionTitle => ShowingArchived ? "Arquivadas" : "Minhas listas";
+    public string SwitchLabel => ShowingArchived ? "Voltar às listas ativas" : "Listas arquivadas";
+    public string EmptyTitle => ShowingArchived ? "Nenhuma lista arquivada" : "O que está faltando?";
     public string EmptyDescription => ShowingArchived ? "As listas que você arquivar aparecerão aqui."
-        : "Crie uma lista e vá lembrando dos produtos ao longo da semana.";
+        : "Toque em Nova lista para organizar sua próxima compra.";
 
     [RelayCommand]
     private Task LoadAsync() => RunAsync(RefreshAsync);
@@ -26,7 +29,7 @@ public partial class ListsViewModel(ShoppingService shopping, IAppNavigation nav
     {
         var lists = await shopping.GetListsAsync(ShowingArchived);
         await dispatcher.InvokeAsync(() => CollectionChanges.Reconcile(Lists, lists.Select(l =>
-            new ListCard(l.Id, l.Name, $"{l.Purchased} de {l.Total} comprados",
+            new ListCard(l.Id, l.Name, $"{l.Purchased} de {l.Total} itens comprados",
                 l.IsArchived ? "Restaurar lista" : "Abrir lista")).ToArray()));
     }
 

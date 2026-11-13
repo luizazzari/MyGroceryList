@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MyGroceryList.Mobile.Controls.BrandTitle">
+    <Grid ColumnDefinitions="28,*" ColumnSpacing="10" VerticalOptions="Center" Padding="0,4">
+        <Path Data="M 5,10 L 23,10 L 25,31 L 3,31 Z M 9,13 L 9,7 C 9,-1 19,-1 19,7 L 19,13"
+              Stroke="{AppThemeBinding Light={StaticResource BrandLight}, Dark={StaticResource BrandDark}}"
+              StrokeThickness="2.4" StrokeLineCap="Round" StrokeLineJoin="Round"
+              Fill="{AppThemeBinding Light={StaticResource SoftGreenLight}, Dark={StaticResource SoftGreenDark}}"
+              WidthRequest="28" HeightRequest="34" VerticalOptions="Center" InputTransparent="True"
+              AutomationProperties.IsInAccessibleTree="False" />
+        <Label Grid.Column="1" Text="MyGroceryList" FontFamily="OpenSansSemibold" FontSize="21"
+               TextColor="{AppThemeBinding Light={StaticResource BrandLight}, Dark={StaticResource BrandDark}}"
+               VerticalOptions="Center" LineBreakMode="TailTruncation" />
+    </Grid>
+</ContentView>

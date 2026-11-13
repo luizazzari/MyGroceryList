@@ -2,27 +2,50 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:MyGroceryList.Mobile.ViewModels"
+             xmlns:controls="clr-namespace:MyGroceryList.Mobile.Controls"
              x:Class="MyGroceryList.Mobile.Views.ItemEditorPage"
-             x:DataType="vm:ItemEditorViewModel" Title="Editar produto">
-    <Grid RowDefinitions="*,Auto" Padding="20,12,20,16" RowSpacing="12">
+             x:DataType="vm:ItemEditorViewModel" Title="Editar item">
+    <Shell.TitleView><controls:BrandTitle /></Shell.TitleView>
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Mais opções" Clicked="ShowOptions" Order="Primary">
+            <ToolbarItem.IconImageSource><FontImageSource Glyph="⋮" Size="26" Color="{AppThemeBinding Light={StaticResource BrandLight}, Dark={StaticResource BrandDark}}" /></ToolbarItem.IconImageSource>
+        </ToolbarItem>
+    </ContentPage.ToolbarItems>
+    <Grid RowDefinitions="*,Auto" Padding="20,16,20,16" RowSpacing="16">
         <ScrollView>
-            <VerticalStackLayout Spacing="10">
-                <Label Text="DO SEU JEITO" Style="{StaticResource Eyebrow}" />
-                <Label Text="Ajustar produto" Style="{StaticResource PageHeading}" SemanticProperties.HeadingLevel="Level1" />
-                <Label Text="Produto" /><Entry Text="{Binding Name}" MaxLength="160" SemanticProperties.Description="Nome do produto" />
-                <Label Text="Quantidade (opcional)" /><Entry Text="{Binding Quantity}" Keyboard="Numeric" Placeholder="Ex.: 1,5" SemanticProperties.Description="Quantidade opcional; use vírgula para decimais" />
-                <Label Text="Unidade (opcional)" /><Entry Text="{Binding Unit}" Placeholder="kg, g, L, un…" MaxLength="24" SemanticProperties.Description="Unidade de medida opcional" />
-                <Label Text="Setor" /><Picker ItemsSource="{Binding AvailableSectors}" SelectedItem="{Binding Sector}" Title="Escolha o setor" SemanticProperties.Description="Setor do supermercado" />
-                <Label Text="Este setor será lembrado nas próximas inclusões do produto." Style="{StaticResource MutedText}" FontSize="13" />
-                <Label Text="Observação (opcional)" /><Editor Text="{Binding Note}" AutoSize="TextChanges" MinimumHeightRequest="90" MaxLength="500" Placeholder="Marca, maturação, substituição…" SemanticProperties.Description="Observação opcional do produto" />
-                <Label Text="{Binding ErrorMessage}" Style="{StaticResource ErrorText}" />
-                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
-                <Button Text="Tentar carregar novamente" Command="{Binding LoadCommand}" Style="{StaticResource TextButton}">
-                    <Button.Triggers><DataTrigger TargetType="Button" Binding="{Binding IsLoaded}" Value="True"><Setter Property="IsVisible" Value="False" /></DataTrigger></Button.Triggers>
-                </Button>
-                <Button Text="Excluir produto" Command="{Binding DeleteCommand}" Style="{StaticResource TextButton}" TextColor="{AppThemeBinding Light=#A92D35, Dark=#FFB2B8}" />
+            <VerticalStackLayout Spacing="20">
+                <Label Text="Editar item" Style="{StaticResource PageHeading}" SemanticProperties.HeadingLevel="Level1" />
+                <VerticalStackLayout Spacing="7">
+                    <Label Text="Produto" Style="{StaticResource FieldLabel}" />
+                    <Border Style="{StaticResource Field}"><Entry Text="{Binding Name}" MaxLength="160" Placeholder="Nome do produto" SemanticProperties.Description="Nome do produto" /></Border>
+                </VerticalStackLayout>
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <VerticalStackLayout Spacing="7">
+                        <Label Text="Quantidade" Style="{StaticResource FieldLabel}" />
+                        <Border Style="{StaticResource Field}"><Entry Text="{Binding Quantity}" Keyboard="Numeric" Placeholder="Opcional, ex.: 1,5" SemanticProperties.Description="Quantidade opcional; use vírgula para decimais" /></Border>
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1" Spacing="7">
+                        <Label Text="Unidade" Style="{StaticResource FieldLabel}" />
+                        <Border Style="{StaticResource Field}"><Entry Text="{Binding Unit}" MaxLength="24" Placeholder="kg, g, L, un…" SemanticProperties.Description="Unidade de medida opcional" /></Border>
+                    </VerticalStackLayout>
+                </Grid>
+                <VerticalStackLayout Spacing="7">
+                    <Label Text="Setor" Style="{StaticResource FieldLabel}" />
+                    <Border Style="{StaticResource Field}"><Picker ItemsSource="{Binding AvailableSectors}" SelectedItem="{Binding Sector}" Title="Escolher setor" SemanticProperties.Description="Setor do supermercado" /></Border>
+                </VerticalStackLayout>
+                <VerticalStackLayout Spacing="7">
+                    <Label Text="Observação" Style="{StaticResource FieldLabel}" />
+                    <Border Style="{StaticResource Field}" Padding="12,8"><Editor Text="{Binding Note}" AutoSize="TextChanges" MinimumHeightRequest="86" MaxLength="500" Placeholder="Opcional" SemanticProperties.Description="Observação opcional do produto" /></Border>
+                </VerticalStackLayout>
+                <VerticalStackLayout Spacing="0">
+                    <Label Text="{Binding ErrorMessage}" Style="{StaticResource ErrorText}" />
+                    <Button Text="Tentar carregar novamente" Command="{Binding LoadCommand}" Style="{StaticResource TextButton}" HorizontalOptions="Start">
+                        <Button.Triggers><DataTrigger TargetType="Button" Binding="{Binding IsLoaded}" Value="True"><Setter Property="IsVisible" Value="False" /></DataTrigger></Button.Triggers>
+                    </Button>
+                </VerticalStackLayout>
             </VerticalStackLayout>
         </ScrollView>
-        <Button Grid.Row="1" Text="Salvar alterações" Command="{Binding SaveCommand}" IsEnabled="{Binding IsLoaded}" />
+        <Button Grid.Row="1" Text="Salvar" Command="{Binding SaveCommand}" IsEnabled="{Binding IsLoaded}" />
+        <ActivityIndicator Grid.RowSpan="2" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" VerticalOptions="Start" HorizontalOptions="End" InputTransparent="True" />
     </Grid>
 </ContentPage>

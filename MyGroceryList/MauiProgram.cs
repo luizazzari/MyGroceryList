@@ -21,6 +21,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IShoppingRepository>(_ => new SqliteShoppingRepository(
             Path.Combine(FileSystem.AppDataDirectory, "mygrocerylist.db")));
         builder.Services.AddSingleton<ShoppingService>();
+        builder.Services.AddSingleton<ThemeService>();
         builder.Services.AddSingleton<IUserInteraction, MauiUserInteraction>();
         builder.Services.AddSingleton<IAppNavigation, ShellNavigation>();
         builder.Services.AddSingleton<IUiDispatcher, MauiUiDispatcher>();

@@ -13,9 +13,14 @@ public partial class ItemRowViewModel : ObservableObject
     public Guid Id { get; }
     public IAsyncRelayCommand ToggleCommand { get; }
     public IAsyncRelayCommand EditCommand { get; }
-    [ObservableProperty] public partial string Name { get; set; } = "";
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(EditAccessibilityLabel))]
+    public partial string Name { get; set; } = "";
     [ObservableProperty] public partial string Detail { get; set; } = "";
-    [ObservableProperty] public partial string MarkLabel { get; set; } = "";
+    [ObservableProperty] public partial string QuantityLabel { get; set; } = "";
+    [ObservableProperty] public partial string Note { get; set; } = "";
+    [ObservableProperty] public partial string ProductIcon { get; set; } = "";
+    [ObservableProperty] public partial bool HasNote { get; set; }
+    public string EditAccessibilityLabel => $"Editar {Name}";
     [ObservableProperty] public partial string AccessibilityLabel { get; set; } = "";
     [ObservableProperty] public partial bool IsPurchased { get; set; }
     public ItemRowViewModel(Guid id, Func<Task> toggle, Func<Task> edit)
@@ -29,10 +34,12 @@ public partial class ItemRowViewModel : ObservableObject
     {
         Name = item.Details.Name;
         IsPurchased = item.IsPurchased;
-        MarkLabel = IsPurchased ? "✓" : "○";
         var quantity = item.Details.Quantity?.ToString("0.############################", CultureInfo.GetCultureInfo("pt-BR"));
-        Detail = string.Join(" · ", new[] { string.Join(' ', new[] { quantity, item.Details.Unit }
-            .Where(s => !string.IsNullOrWhiteSpace(s))), item.Details.Note }.Where(s => !string.IsNullOrWhiteSpace(s)));
+        QuantityLabel = string.Join(' ', new[] { quantity, item.Details.Unit }.Where(s => !string.IsNullOrWhiteSpace(s)));
+        Note = item.Details.Note ?? "";
+        HasNote = !string.IsNullOrEmpty(Note);
+        ProductIcon = ProductAppearance.IconFor(Name, item.Details.Sector);
+        Detail = string.Join(" · ", new[] { QuantityLabel, item.Details.Note }.Where(s => !string.IsNullOrWhiteSpace(s)));
         AccessibilityLabel = $"{(IsPurchased ? "Desmarcar" : "Marcar como comprado")}: {Name}. {Detail}";
     }
 }
@@ -61,6 +68,7 @@ public partial class ShoppingViewModel(ShoppingService shopping, IAppNavigation 
     [ObservableProperty] public partial string PurchasedLabel { get; set; } = "Comprados";
     [ObservableProperty] public partial string StatusMessage { get; set; } = "";
     [ObservableProperty] public partial bool AllPurchased { get; set; }
+    [ObservableProperty] public partial bool HasPurchased { get; set; }
     public event EventHandler? EntryAdded;
 
     [RelayCommand]
@@ -136,12 +144,13 @@ public partial class ShoppingViewModel(ShoppingService shopping, IAppNavigation 
         current = list;
         Title = list.Name;
         var purchased = list.Items.Count(i => i.IsPurchased);
-        ProgressLabel = $"{purchased} de {list.Items.Count} comprados";
+        ProgressLabel = $"{purchased} de {list.Items.Count} itens comprados";
         Progress = list.Items.Count == 0 ? 0 : (double)purchased / list.Items.Count;
         IsEmpty = list.Items.Count == 0;
         AllPurchased = !IsEmpty && purchased == list.Items.Count;
+        HasPurchased = purchased > 0;
         CanUndo = list.Undo is not null;
-        PurchasedLabel = $"Comprados ({purchased}) · {(ShowPurchased ? "recolher" : "mostrar")}";
+        PurchasedLabel = $"{(ShowPurchased ? "⌃ Ocultar" : "⌄ Mostrar")} comprados ({purchased})";
 
         foreach (var id in rows.Keys.Where(id => list.Items.All(i => i.Id != id)).ToArray()) rows.Remove(id);
         foreach (var item in list.Items)

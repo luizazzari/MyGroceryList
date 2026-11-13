@@ -5,16 +5,29 @@ Aplicativo nativo de lista de compras em C#/.NET 10, .NET MAUI, XAML e MVVM, com
 ## O que funciona
 
 - Criar várias listas, abrir novamente, renomear, arquivar e restaurar.
-- Adicionar produtos em sequência pelo campo fixo no rodapé; o campo limpa e recebe foco depois da gravação.
+- Adicionar produtos pelo botão **Adicionar item**, no rodapé. Ele abre um campo que permanece acessível para inclusões em sequência, limpa e recebe foco depois da gravação.
 - Interpretar `2 leites`, `500 g de queijo` e `1,5 kg de arroz`, preservando sufixos de embalagem como `Leite integral 1 L`. Quantidades usam `decimal`, nunca ponto flutuante.
 - Editar nome, quantidade e unidade opcionais, setor e observação; excluir produtos com confirmação.
 - Agrupar pendentes nos nove setores iniciais e lembrar o setor escolhido para inclusões futuras do mesmo produto, ignorando caixa e acentos na identidade.
 - Oferecer revisão de duplicata: somar somente quantidades explícitas de nomes equivalentes, mesma unidade normalizada e observação compatível, ou manter separado. Variações de produto permanecem distintas; não há conversão automática entre g e kg.
 - Marcar e desmarcar com uma área ampla, mostrar progresso, recolher/expandir comprados e desfazer a última marcação. O desfazer também é persistido.
 - Salvar cada alteração imediatamente no SQLite. Não é necessário sair da tela para salvar. Reabrir a lista recupera os itens e suas marcações.
-- Seguir o tema claro/escuro do aparelho, permitir escala de fontes e fornecer descrições semânticas dos controles.
+- Escolher os temas **Claro**, **Escuro** ou **Automático** em **⋮ → Aparência**. A escolha fica salva no aparelho; Automático acompanha o sistema.
+- Usar uma interface simples com cabeçalhos verdes por setor, ícones de produtos, quantidade à direita, marcação ampla e descrições para leitores de tela.
 
 Arquivar guarda a lista e seus estados; a ação **não representa fechamento de compra**. Histórico, fechamento e **Usar última compra** fazem parte da próxima etapa e ainda não aparecem como ações na interface.
+
+## Interface
+
+A interface foi refeita a partir da referência visual fornecida: fundo claro quente, verde escuro nos destaques, setores em verde suave e cartões de produto discretos. O modo escuro usa superfícies escuras e verdes claros com a mesma organização. As cores ficam centralizadas em `Resources/Styles/Colors.xaml` e são aplicadas com `AppThemeBinding`.
+
+- **Listas:** toque em uma lista para abrir, ou em **Nova lista** para criar. As arquivadas ficam em **⋮ → Listas arquivadas**.
+- **Compra:** toque na linha ou na caixa para marcar. A quantidade fica à direita; **⋯** abre a edição do item. Os comprados podem ser mostrados ou recolhidos no fim da lista. **Desfazer** aparece após uma marcação.
+- **Adicionar:** o botão principal abre o campo; adicione vários produtos em sequência e toque em **Fechar** quando terminar.
+- **Editar:** nome, quantidade, unidade, setor e observação; **Salvar** fica no rodapé. **⋮ → Excluir item** pede confirmação antes de remover.
+- **Aparência:** disponível no menu das três telas. A seleção é persistida em `Preferences`, sem alterar as listas nem o banco SQLite.
+
+Os ícones de produtos são emojis decorativos do sistema, com alternativa por setor para produtos não reconhecidos. Nome e quantidade continuam em texto. Não há imagens ou serviços externos para exibir a lista.
 
 ## Requisitos
 
@@ -97,6 +110,8 @@ Referências oficiais: [SQLite com MAUI](https://learn.microsoft.com/dotnet/maui
 
 ## Validação desta entrega
 
+Revisão da interface em **13/11/2026**: 31 testes de regressão aprovados; Android (incluindo APK autocontido) e Windows compilados sem avisos ou erros. A restauração do build de Windows precisou usar o cache local de pacotes porque o acesso ao NuGet está restrito neste ambiente. A aparência nos dois temas, a preferência após reiniciar e a interação por toque ainda precisam ser conferidas em aparelho, conforme o roteiro abaixo.
+
 Ambiente inspecionado em **12/11/2026**: Windows, SDK 10.0.402; workloads Android 36.1.118, iOS/MacCatalyst 26.5.10315 e MAUI Windows 10.0.110.
 
 | Verificação | Resultado |
@@ -115,13 +130,13 @@ Ambiente inspecionado em **12/11/2026**: Windows, SDK 10.0.402; workloads Androi
 ### Roteiro para validação em dispositivo
 
 1. Crie “Mercado da semana” e “Churrasco”. Saia e abra novamente cada lista.
-2. Adicione `2 leites`, `500 g de queijo`, `1,5 kg de arroz` e `Leite integral 1 L`; confirme interpretação, foco contínuo e preservação do nome da embalagem.
+2. Toque em **Adicionar item** e adicione `2 leites`, `500 g de queijo`, `1,5 kg de arroz` e `Leite integral 1 L`; confirme interpretação, foco contínuo e preservação do nome da embalagem.
 3. Edite quantidade, unidade, observação e setor. Adicione novamente o mesmo nome com outra caixa/acentuação e confira o setor lembrado.
 4. Teste duplicata com quantidades e mesma unidade, depois g versus kg, quantidade em branco e produtos com variações.
 5. Marque, desmarque, expanda/recolha comprados e desfaça. Confirme que os outros itens não perdem a posição de rolagem.
 6. Ative modo avião, force o encerramento e reabra. Abra a lista: campos, marcações e botão Desfazer devem estar preservados.
-7. Renomeie, arquive, visite “Ver arquivadas” e restaure. Exclua um produto e confira após reiniciar.
-8. Com tema escuro, maior tamanho de fonte e TalkBack/VoiceOver, percorra os controles e confira legibilidade e área de toque. Teste também em tela pequena e com teclado aberto.
+7. Renomeie, arquive, visite **⋮ → Listas arquivadas** e restaure. Exclua um produto e confira após reiniciar.
+8. Em **⋮ → Aparência**, teste **Claro**, **Escuro** e **Automático** nas três telas; feche e abra o app para confirmar a preferência. Com fonte ampliada e TalkBack/VoiceOver, confira legibilidade, nomes, quantidades e área de toque. Teste também em tela pequena e com teclado aberto.
 
 ## Próximas etapas e backend
 

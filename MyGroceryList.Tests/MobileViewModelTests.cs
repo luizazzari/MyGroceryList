@@ -43,7 +43,7 @@ public sealed class MobileViewModelTests : IDisposable
         var reopened = NewShopping(Service, list.Id);
         await reopened.LoadCommand.ExecuteAsync(null);
         Assert.True(reopened.CanUndo);
-        Assert.Equal("1 de 2 comprados", reopened.ProgressLabel);
+        Assert.Equal("1 de 2 itens comprados", reopened.ProgressLabel);
         await reopened.UndoCommand.ExecuteAsync(null);
         Assert.Equal(2, Assert.Single(reopened.Groups).Count);
         Assert.False(reopened.CanUndo);
