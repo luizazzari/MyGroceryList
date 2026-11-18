@@ -1,4 +1,5 @@
 using MyGroceryList.Application.Shopping;
+using MyGroceryList.Application.Transfer;
 using MyGroceryList.Domain.Shopping;
 using MyGroceryList.Mobile.Data.Shopping;
 using MyGroceryList.Mobile.Services;
@@ -10,7 +11,88 @@ public sealed class MobileViewModelTests : IDisposable
 {
     private readonly string directory = Path.Combine(Path.GetTempPath(), "MyGroceryList.Tests", Guid.NewGuid().ToString());
     private ShoppingService Service => new(new SqliteShoppingRepository(Path.Combine(directory, "mobile.db")), TimeProvider.System);
+    private ListTransferService Transfer => new(new SqliteShoppingRepository(Path.Combine(directory, "mobile.db")), TimeProvider.System);
     private readonly TestUi ui = new();
+
+    [Fact]
+    public async Task Import_entry_point_opens_a_preview_and_does_not_save_until_confirmed()
+    {
+        var vm = new ListsViewModel(Service, ui, ui, ui, Transfer, ui);
+        await vm.ImportCommand.ExecuteAsync(null);
+        Assert.Null(ui.ImportPreview);
+        Assert.Empty(vm.ErrorMessage);
+        ui.PickedFile = new("Feira.csv", System.Text.Encoding.UTF8.GetBytes("nome;quantidade\nMaçã;1,5\n"), "text/csv");
+        await vm.ImportCommand.ExecuteAsync(null);
+        Assert.NotNull(ui.ImportPreview);
+        Assert.Equal(1.5m, Assert.Single(ui.ImportPreview.Items).Details.Quantity);
+        Assert.Empty(await Service.GetListsAsync(ct: TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task Invalid_import_is_reported_on_the_list_screen()
+    {
+        var vm = new ListsViewModel(Service, ui, ui, ui, Transfer, ui);
+        ui.PickedFile = new("Inválida.csv", System.Text.Encoding.UTF8.GetBytes("nome;quantidade\nArroz;texto\n"), "text/csv");
+        await vm.ImportCommand.ExecuteAsync(null);
+        Assert.NotEmpty(vm.ErrorMessage);
+        Assert.Null(ui.ImportPreview);
+        Assert.Empty(await Service.GetListsAsync(ct: TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task Import_review_saves_only_selected_edited_items_and_preserves_purchased_state()
+    {
+        var vm = new ImportListViewModel(Transfer, ui, ui);
+        vm.Initialize(new("Original", [new(new("Arroz", 1m), true), new(new("Excluir da importação"), false)]));
+        vm.Name = "Lista revisada";
+        vm.Items[0].Quantity = "1,5";
+        vm.Items[0].Unit = "kg";
+        vm.Items[0].Sector = "Mercearia";
+        vm.Items[1].IsIncluded = false;
+        await vm.ImportCommand.ExecuteAsync(null);
+        Assert.Empty(vm.ErrorMessage);
+        Assert.True(vm.HasImported);
+        Assert.False(vm.CanEdit);
+        var saved = await Service.OpenAsync(ui.LastOpenedList, TestContext.Current.CancellationToken);
+        Assert.Equal("Lista revisada", saved.Name);
+        var item = Assert.Single(saved.Items);
+        Assert.Equal(1.5m, item.Details.Quantity);
+        Assert.Equal("kg", item.Details.Unit);
+        Assert.True(item.IsPurchased);
+    }
+
+    [Fact]
+    public async Task Retrying_navigation_after_import_does_not_create_a_duplicate_list()
+    {
+        var vm = new ImportListViewModel(Transfer, ui, ui);
+        vm.Initialize(new("Lista", [new(new("Arroz"), false)]));
+        ui.FailImportNavigation = true;
+        await vm.ImportCommand.ExecuteAsync(null);
+        Assert.NotEmpty(vm.ErrorMessage);
+        Assert.True(vm.HasImported);
+        Assert.Equal("Abrir lista", vm.ImportButtonLabel);
+        ui.FailImportNavigation = false;
+        await vm.ImportCommand.ExecuteAsync(null);
+        Assert.Empty(vm.ErrorMessage);
+        Assert.Equal(ui.LastOpenedList, Assert.Single(await Service.GetListsAsync(ct: TestContext.Current.CancellationToken)).Id);
+    }
+
+    [Fact]
+    public async Task Export_entry_point_shares_a_csv_that_can_be_imported_again()
+    {
+        var list = await Service.CreateAsync("Mercado", TestContext.Current.CancellationToken);
+        await Service.AddAsync(list.Id, new("Leite", 2m), ct: TestContext.Current.CancellationToken);
+        var vm = NewShopping(Service, list.Id);
+        await vm.ExportCommand.ExecuteAsync(null);
+        Assert.Null(ui.SharedFile);
+        ui.Choice = "CSV (.csv)";
+        await vm.ExportCommand.ExecuteAsync(null);
+        Assert.Empty(vm.ErrorMessage);
+        Assert.NotNull(ui.SharedFile);
+        Assert.EndsWith(".csv", ui.SharedFile.FileName);
+        var preview = await Transfer.ReadAsync(ui.SharedFile.FileName, ui.SharedFile.Content, TestContext.Current.CancellationToken);
+        Assert.Equal("Leite", Assert.Single(preview.Items).Details.Name);
+    }
 
     [Fact]
     public async Task Shopping_screen_moves_only_affected_rows_and_recovers_undo_after_restart()
@@ -143,7 +225,7 @@ public sealed class MobileViewModelTests : IDisposable
     public async Task List_screen_creates_opens_archives_and_restores_personal_lists()
     {
         var service = Service;
-        var vm = new ListsViewModel(service, ui, ui, ui);
+        var vm = new ListsViewModel(service, ui, ui, ui, Transfer, ui);
         ui.Prompt = "Compra do mês";
         await vm.CreateCommand.ExecuteAsync(null);
         var card = Assert.Single(vm.Lists);
@@ -172,13 +254,13 @@ public sealed class MobileViewModelTests : IDisposable
         Assert.Equal(1, ui.FailureCount);
     }
 
-    private ShoppingViewModel NewShopping(ShoppingService service, Guid id) => new(service, ui, ui, ui) { ListId = id };
+    private ShoppingViewModel NewShopping(ShoppingService service, Guid id) => new(service, ui, ui, ui, Transfer, ui) { ListId = id };
     public void Dispose()
     {
         if (Directory.Exists(directory)) Directory.Delete(directory, true);
     }
 
-    private sealed class TestUi : IUserInteraction, IAppNavigation, IUiDispatcher
+    private sealed class TestUi : IUserInteraction, IAppNavigation, IUiDispatcher, IListFiles
     {
         public string? Prompt { get; set; }
         public string? Choice { get; set; }
@@ -186,6 +268,10 @@ public sealed class MobileViewModelTests : IDisposable
         public Guid LastOpenedList { get; private set; }
         public int BackCount { get; private set; }
         public int FailureCount { get; private set; }
+        public ListFile? PickedFile { get; set; }
+        public ListFile? SharedFile { get; private set; }
+        public ListImportPreview? ImportPreview { get; private set; }
+        public bool FailImportNavigation { get; set; }
         public string[] LastOptions { get; private set; } = [];
         public TaskCompletionSource<string?>? PendingChoice { get; set; }
         public TaskCompletionSource ChoiceOpened { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -201,6 +287,19 @@ public sealed class MobileViewModelTests : IDisposable
         public Task OpenListAsync(Guid id) { LastOpenedList = id; return Task.CompletedTask; }
         public Task EditItemAsync(Guid listId, Guid itemId) => Task.CompletedTask;
         public Task BackAsync() { BackCount++; return Task.CompletedTask; }
+        public Task ReviewImportAsync(ListImportPreview preview) { ImportPreview = preview; return Task.CompletedTask; }
+        public Task OpenImportedListAsync(Guid id)
+        {
+            if (FailImportNavigation) throw new IOException();
+            LastOpenedList = id;
+            return Task.CompletedTask;
+        }
+        public Task<ListFile?> PickAsync(CancellationToken cancellationToken = default) => Task.FromResult(PickedFile);
+        public Task ShareAsync(ListFile file, CancellationToken cancellationToken = default)
+        {
+            SharedFile = file;
+            return Task.CompletedTask;
+        }
         public Task InvokeAsync(Action action) { action(); return Task.CompletedTask; }
     }
 

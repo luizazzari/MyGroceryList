@@ -14,6 +14,7 @@ Aplicativo nativo de lista de compras em C#/.NET 10, .NET MAUI, XAML e MVVM, com
 - Salvar cada alteração imediatamente no SQLite. Não é necessário sair da tela para salvar. Reabrir a lista recupera os itens e suas marcações.
 - Escolher os temas **Claro**, **Escuro** ou **Automático** em **⋮ → Aparência**. A escolha fica salva no aparelho; Automático acompanha o sistema.
 - Usar uma interface simples com cabeçalhos verdes por setor, ícones de produtos, quantidade à direita, marcação ampla e descrições para leitores de tela.
+- Exportar listas em CSV ou JSON e importar arquivos com revisão dos itens antes de salvar.
 
 Arquivar guarda a lista e seus estados; a ação **não representa fechamento de compra**. Histórico, fechamento e **Usar última compra** fazem parte da próxima etapa e ainda não aparecem como ações na interface.
 
@@ -28,6 +29,28 @@ A interface foi refeita a partir da referência visual fornecida: fundo claro qu
 - **Aparência:** disponível no menu das três telas. A seleção é persistida em `Preferences`, sem alterar as listas nem o banco SQLite.
 
 Os ícones de produtos são emojis decorativos do sistema, com alternativa por setor para produtos não reconhecidos. Nome e quantidade continuam em texto. Não há imagens ou serviços externos para exibir a lista.
+
+## Exportar e importar listas
+
+Abra uma lista e use **⋮ → Exportar lista** para escolher **CSV (.csv)** ou **MyGroceryList (.json)**. O aplicativo gera o arquivo e abre o compartilhamento do sistema para enviá-lo ou salvá-lo pelos destinos disponíveis no aparelho.
+
+Na tela **Minhas listas**, use **⋮ → Importar lista** e selecione um arquivo CSV ou JSON. A revisão permite alterar o nome da lista, selecionar os itens e editar produto, quantidade, unidade, setor, observação e marcação de comprado. Toque em **Importar lista** para salvar e abrir a nova lista.
+
+A importação cria uma lista ativa com IDs próprios e preserva as marcações selecionadas na revisão. As linhas repetidas são mantidas separadas. O lote inteiro é gravado em uma transação SQLite. Se a navegação falhar depois da gravação, o botão **Abrir lista** permite tentar novamente usando a lista já criada.
+
+O JSON do MyGroceryList usa um formato versionado e transporta nome, itens, quantidades, unidades, setores, observações e marcações. Cada arquivo representa uma lista.
+
+O CSV exportado usa UTF-8 com BOM, ponto e vírgula como separador e vírgula decimal. Todos os campos são colocados entre aspas, com escape de aspas internas e suporte a observações com várias linhas. Um arquivo vazio de itens também preserva o nome da lista.
+
+```csv
+lista;nome;quantidade;unidade;setor;observacao;comprado
+Mercado;Arroz;1,5;kg;Mercearia;Integral;não
+Mercado;Leite;2;un;Laticínios;;sim
+```
+
+Para arquivos externos, o importador aceita separador `;` ou `,`, cabeçalhos sem distinção de caixa e acentos, e quantidades decimais com vírgula ou ponto. Com separador vírgula, coloque números como `"1,5"` entre aspas. Salve o texto em UTF-8 ou em Unicode com BOM.
+
+A coluna `nome` ou `produto` é obrigatória. As colunas opcionais são `lista`, `quantidade`, `unidade`, `setor`, `observacao` e `comprado`. O nome da lista vem da coluna `lista` ou do nome do arquivo. Setor em branco usa **Outros** e marcação em branco usa **Pendente**. `comprado` aceita `sim`/`não`, `true`/`false`, `1`/`0` ou `comprado`/`pendente`. Setores preenchidos devem corresponder aos setores do aplicativo. Erros de conteúdo são apresentados antes de qualquer gravação.
 
 ## Requisitos
 
@@ -110,19 +133,23 @@ Referências oficiais: [SQLite com MAUI](https://learn.microsoft.com/dotnet/maui
 
 ## Validação desta entrega
 
+Exportação e importação adicionadas em **17/11/2026**. Os 63 testes passaram, incluindo ida e volta em CSV e JSON, revisão dos itens, falha de gravação com rollback e repetição de navegação após importar. Os builds de Windows e Android, com APK de depuração assinado, passaram sem avisos ou erros. Os diálogos nativos de seleção e compartilhamento de arquivos ainda precisam ser conferidos em aparelho.
+
 Revisão da interface em **13/11/2026**: 31 testes de regressão aprovados; Android (incluindo APK autocontido) e Windows compilados sem avisos ou erros. A restauração do build de Windows precisou usar o cache local de pacotes porque o acesso ao NuGet está restrito neste ambiente. A aparência nos dois temas, a preferência após reiniciar e a interação por toque ainda precisam ser conferidas em aparelho, conforme o roteiro abaixo.
 
 Ambiente inspecionado em **12/11/2026**: Windows, SDK 10.0.402; workloads Android 36.1.118, iOS/MacCatalyst 26.5.10315 e MAUI Windows 10.0.110.
 
 | Verificação | Resultado |
 | --- | --- |
-| `dotnet test MyGroceryList.Tests/MyGroceryList.Tests.csproj` | 31 testes aprovados. |
+| `dotnet test MyGroceryList.Tests/MyGroceryList.Tests.csproj` | 63 testes aprovados. |
 | Compilação Android Debug | Aprovada, sem avisos/erros, incluindo geração XAML e APK autocontido assinado para depuração. |
 | Compilação Windows Debug | Aprovada, sem avisos/erros. |
 | Reabrir banco offline | Validado por testes: nova instância recupera várias listas, IDs, quantidades, observações, marcações e desfazer. |
 | Migração v1 → v2 | Validada com dados existentes. |
 | Falha durante escrita | Validado rollback de marcação e desfazer por falha SQLite induzida. |
 | Concorrência/toques repetidos | Validados 25 inclusões concorrentes e toque repetido durante confirmação de duplicata. |
+| Exportação/importação CSV e JSON | Validadas precisão decimal, acentos, campos com aspas e várias linhas, listas vazias, novos IDs, marcações, edição da revisão e rollback do lote. |
+| Seleção e compartilhamento de arquivos | Integração compilada para Android e Windows; conferência em aparelho pendente. |
 | Execução Android em emulador/aparelho | Não validada: nenhum dispositivo conectado; emulador configurado não iniciou por driver de aceleração indisponível. |
 | Compilação/execução iOS | Não validada: restauração depende de pacotes iOS fora do cache e acesso ao NuGet; ambiente atual é Windows sem Mac pareado. |
 | Uso com uma mão, leitores de tela, escala de fontes e aparência | Implementação preparada; validação em aparelho ainda necessária. |

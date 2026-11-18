@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MyGroceryList.Mobile.ViewModels"
+             xmlns:controls="clr-namespace:MyGroceryList.Mobile.Controls"
+             x:Class="MyGroceryList.Mobile.Views.ImportListPage"
+             x:DataType="vm:ImportListViewModel" Title="Importar lista">
+    <Shell.TitleView><controls:BrandTitle /></Shell.TitleView>
+    <Grid Padding="20,16" RowDefinitions="*,Auto,Auto" RowSpacing="12">
+        <CollectionView ItemsSource="{Binding Items}" IsEnabled="{Binding CanEdit}" SelectionMode="None">
+            <CollectionView.Header>
+                <VerticalStackLayout x:DataType="vm:ImportListViewModel" Spacing="10" Padding="0,0,0,16">
+                    <Label Text="Importar lista" Style="{StaticResource PageHeading}" SemanticProperties.HeadingLevel="Level1" />
+                    <Label Text="Revise os itens e desmarque o que não quiser importar." Style="{StaticResource MutedText}" />
+                    <Label Text="Nome da lista" Style="{StaticResource FieldLabel}" />
+                    <Border Style="{StaticResource Field}"><Entry Text="{Binding Name}" MaxLength="100" SemanticProperties.Description="Nome da lista importada" /></Border>
+                </VerticalStackLayout>
+            </CollectionView.Header>
+            <CollectionView.EmptyView>
+                <Label Text="Esta lista está sem itens." Style="{StaticResource MutedText}" Padding="0,20" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:ImportItemViewModel">
+                    <Border Style="{StaticResource Card}" Padding="8" Margin="0,0,0,10">
+                        <VerticalStackLayout Spacing="8">
+                            <Grid ColumnDefinitions="48,*,48" ColumnSpacing="6">
+                                <CheckBox IsChecked="{Binding IsIncluded}" MinimumWidthRequest="48" MinimumHeightRequest="48"
+                                          Color="{AppThemeBinding Light={StaticResource BrandLight}, Dark={StaticResource BrandDark}}"
+                                          SemanticProperties.Description="{Binding Name, StringFormat='Incluir {0} na importação'}" />
+                                <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                                    <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" />
+                                    <Label Text="{Binding Summary}" Style="{StaticResource MutedText}" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="2" Text="⋯" Style="{StaticResource IconButton}" Command="{Binding ToggleEditCommand}"
+                                        SemanticProperties.Description="{Binding Name, StringFormat='Editar {0} antes de importar'}" />
+                            </Grid>
+                            <VerticalStackLayout IsVisible="{Binding IsEditing}" Padding="6,0,6,8" Spacing="10">
+                                <Label Text="Produto" Style="{StaticResource FieldLabel}" />
+                                <Border Style="{StaticResource Field}"><Entry Text="{Binding Name}" MaxLength="160" SemanticProperties.Description="Nome do produto" /></Border>
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                    <VerticalStackLayout Spacing="6">
+                                        <Label Text="Quantidade" Style="{StaticResource FieldLabel}" />
+                                        <Border Style="{StaticResource Field}"><Entry Text="{Binding Quantity}" Keyboard="Numeric" Placeholder="Opcional" SemanticProperties.Description="Quantidade opcional" /></Border>
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="6">
+                                        <Label Text="Unidade" Style="{StaticResource FieldLabel}" />
+                                        <Border Style="{StaticResource Field}"><Entry Text="{Binding Unit}" MaxLength="24" Placeholder="Opcional" SemanticProperties.Description="Unidade opcional" /></Border>
+                                    </VerticalStackLayout>
+                                </Grid>
+                                <Label Text="Setor" Style="{StaticResource FieldLabel}" />
+                                <Border Style="{StaticResource Field}"><Picker ItemsSource="{Binding AvailableSectors}" SelectedItem="{Binding Sector}" SemanticProperties.Description="Setor do produto" /></Border>
+                                <Label Text="Observação" Style="{StaticResource FieldLabel}" />
+                                <Border Style="{StaticResource Field}"><Editor Text="{Binding Note}" AutoSize="TextChanges" MaxLength="500" Placeholder="Opcional" SemanticProperties.Description="Observação opcional" /></Border>
+                                <HorizontalStackLayout Spacing="8">
+                                    <CheckBox IsChecked="{Binding IsPurchased}" MinimumWidthRequest="48" MinimumHeightRequest="48"
+                                              Color="{AppThemeBinding Light={StaticResource BrandLight}, Dark={StaticResource BrandDark}}" SemanticProperties.Description="Item já comprado" />
+                                    <Label Text="Já comprado" VerticalOptions="Center" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+        <Label Grid.Row="1" Text="{Binding ErrorMessage}" Style="{StaticResource ErrorText}" />
+        <Button Grid.Row="2" Text="{Binding ImportButtonLabel}" Command="{Binding ImportCommand}" />
+        <ActivityIndicator Grid.Row="0" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="End" VerticalOptions="Start" InputTransparent="True" />
+    </Grid>
+</ContentPage>

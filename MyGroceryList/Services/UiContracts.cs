@@ -1,3 +1,5 @@
+using MyGroceryList.Application.Transfer;
+
 namespace MyGroceryList.Mobile.Services;
 
 public interface IUserInteraction
@@ -13,6 +15,14 @@ public interface IAppNavigation
     Task OpenListAsync(Guid id);
     Task EditItemAsync(Guid listId, Guid itemId);
     Task BackAsync();
+    Task ReviewImportAsync(ListImportPreview preview);
+    Task OpenImportedListAsync(Guid id);
+}
+
+public interface IListFiles
+{
+    Task<ListFile?> PickAsync(CancellationToken cancellationToken = default);
+    Task ShareAsync(ListFile file, CancellationToken cancellationToken = default);
 }
 
 public interface IUiDispatcher

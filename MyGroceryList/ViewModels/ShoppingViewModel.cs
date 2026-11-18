@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using MyGroceryList.Application.Shopping;
 using MyGroceryList.Domain.Shopping;
 using MyGroceryList.Mobile.Services;
+using MyGroceryList.Application.Transfer;
 
 namespace MyGroceryList.Mobile.ViewModels;
 
@@ -50,7 +51,8 @@ public sealed class ItemGroup(string name) : ObservableCollection<ItemRowViewMod
 }
 
 public partial class ShoppingViewModel(ShoppingService shopping, IAppNavigation navigation,
-    IUserInteraction interaction, IUiDispatcher dispatcher) : ViewModelBase(interaction)
+    IUserInteraction interaction, IUiDispatcher dispatcher, ListTransferService transfer,
+    IListFiles files) : ViewModelBase(interaction)
 {
     private GroceryList? current;
     private readonly Dictionary<Guid, ItemRowViewModel> rows = [];
@@ -73,6 +75,16 @@ public partial class ShoppingViewModel(ShoppingService shopping, IAppNavigation 
 
     [RelayCommand]
     private Task LoadAsync() => RunAsync(async () => await ApplyAsync(await shopping.OpenAsync(ListId)));
+
+    [RelayCommand]
+    private Task ExportAsync(CancellationToken ct) => RunAsync(async () =>
+    {
+        var selected = await Interaction.ChooseAsync("Exportar lista", "CSV (.csv)", "MyGroceryList (.json)");
+        if (selected is null) return;
+        var format = selected == "CSV (.csv)" ? ListFileFormat.Csv : ListFileFormat.Json;
+        var file = await transfer.ExportAsync(ListId, format, ct);
+        await files.ShareAsync(file, ct);
+    });
 
     [RelayCommand]
     private Task AddAsync() => RunAsync(async () =>

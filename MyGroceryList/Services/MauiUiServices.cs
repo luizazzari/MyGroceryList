@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using MyGroceryList.Mobile.Views;
+using MyGroceryList.Application.Transfer;
 
 namespace MyGroceryList.Mobile.Services;
 
@@ -28,6 +29,10 @@ public sealed class ShellNavigation : IAppNavigation
     public Task EditItemAsync(Guid listId, Guid itemId) => Shell.Current.GoToAsync(nameof(ItemEditorPage),
         new ShellNavigationQueryParameters { ["ListId"] = listId, ["ItemId"] = itemId });
     public Task BackAsync() => Shell.Current.GoToAsync("..");
+    public Task ReviewImportAsync(ListImportPreview preview) => Shell.Current.GoToAsync(nameof(ImportListPage),
+        new ShellNavigationQueryParameters { ["Preview"] = preview });
+    public Task OpenImportedListAsync(Guid id) => Shell.Current.GoToAsync($"../{nameof(ShoppingPage)}",
+        new ShellNavigationQueryParameters { ["ListId"] = id });
 }
 
 public sealed class MauiUiDispatcher : IUiDispatcher

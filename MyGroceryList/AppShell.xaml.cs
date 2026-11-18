@@ -10,5 +10,6 @@ public partial class AppShell : Shell
         ListsContent.Content = listsPage;
         Routing.RegisterRoute(nameof(ShoppingPage), typeof(ShoppingPage));
         Routing.RegisterRoute(nameof(ItemEditorPage), typeof(ItemEditorPage));
+        Routing.RegisterRoute(nameof(ImportListPage), typeof(ImportListPage));
     }
 }

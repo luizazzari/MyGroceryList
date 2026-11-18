@@ -48,9 +48,10 @@ public partial class ShoppingPage : ContentPage, IQueryAttributable
     private async void ShowOptions(object? sender, EventArgs e)
     {
         var selected = await DisplayActionSheetAsync("Opções da lista", "Cancelar", null,
-            "Renomear lista", "Arquivar lista", "Aparência");
+            "Exportar lista", "Renomear lista", "Arquivar lista", "Aparência");
         switch (selected)
         {
+            case "Exportar lista": await viewModel.ExportCommand.ExecuteAsync(null); break;
             case "Renomear lista": await viewModel.RenameCommand.ExecuteAsync(null); break;
             case "Arquivar lista": await viewModel.ArchiveCommand.ExecuteAsync(null); break;
             case "Aparência": await themeService.ChooseAsync(this); break;

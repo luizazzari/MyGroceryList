@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using MyGroceryList.Application.Shopping;
+using MyGroceryList.Application.Transfer;
 using MyGroceryList.Mobile.Data.Shopping;
 using MyGroceryList.Mobile.Services;
 using MyGroceryList.Mobile.ViewModels;
@@ -21,6 +22,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<IShoppingRepository>(_ => new SqliteShoppingRepository(
             Path.Combine(FileSystem.AppDataDirectory, "mygrocerylist.db")));
         builder.Services.AddSingleton<ShoppingService>();
+        builder.Services.AddSingleton<ListTransferService>();
+        builder.Services.AddSingleton<IListFiles, MauiListFiles>();
         builder.Services.AddSingleton<ThemeService>();
         builder.Services.AddSingleton<IUserInteraction, MauiUserInteraction>();
         builder.Services.AddSingleton<IAppNavigation, ShellNavigation>();
@@ -28,9 +31,11 @@ public static class MauiProgram
         builder.Services.AddTransient<ListsViewModel>();
         builder.Services.AddTransient<ShoppingViewModel>();
         builder.Services.AddTransient<ItemEditorViewModel>();
+        builder.Services.AddTransient<ImportListViewModel>();
         builder.Services.AddTransient<ListsPage>();
         builder.Services.AddTransient<ShoppingPage>();
         builder.Services.AddTransient<ItemEditorPage>();
+        builder.Services.AddTransient<ImportListPage>();
         builder.Services.AddSingleton<AppShell>();
 #if DEBUG
         builder.Logging.AddDebug();

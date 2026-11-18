@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MyGroceryList.Application.Shopping;
 using MyGroceryList.Mobile.Services;
+using MyGroceryList.Application.Transfer;
 
 namespace MyGroceryList.Mobile.ViewModels;
 
@@ -12,7 +13,8 @@ public sealed record ListCard(Guid Id, string Name, string ProgressLabel, string
 }
 
 public partial class ListsViewModel(ShoppingService shopping, IAppNavigation navigation,
-    IUserInteraction interaction, IUiDispatcher dispatcher) : ViewModelBase(interaction)
+    IUserInteraction interaction, IUiDispatcher dispatcher, ListTransferService transfer,
+    IListFiles files) : ViewModelBase(interaction)
 {
     public ObservableCollection<ListCard> Lists { get; } = [];
     [ObservableProperty] public partial bool ShowingArchived { get; set; }
@@ -24,6 +26,15 @@ public partial class ListsViewModel(ShoppingService shopping, IAppNavigation nav
 
     [RelayCommand]
     private Task LoadAsync() => RunAsync(RefreshAsync);
+
+    [RelayCommand]
+    private Task ImportAsync(CancellationToken ct) => RunAsync(async () =>
+    {
+        var file = await files.PickAsync(ct);
+        if (file is null) return;
+        var preview = await transfer.ReadAsync(file.FileName, file.Content, ct);
+        await navigation.ReviewImportAsync(preview);
+    });
 
     private async Task RefreshAsync()
     {
